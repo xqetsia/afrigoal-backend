@@ -49,5 +49,5 @@ async def get_my_teams(
         db = Depends(get_db)
 ):
     follows = db.query(UserTeam).filter_by(user_id=user["uid"]).all()
-    return {"team_ids": [f.teams_id for f in follows]}
+    return {"team_ids": [f.team_id for f in follows]}
 
