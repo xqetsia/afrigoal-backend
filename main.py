@@ -11,8 +11,8 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/afcon/teams")
 # gets all the african teams (countries)
+@app.get("/afcon/teams")
 async def get_teams():
     try:
         data = await fetch_teams()
@@ -20,10 +20,9 @@ async def get_teams():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.post("/me/teams/{team_id}")
 # retrieve the user from the database. if the user does not exist, add them to the database
 # check if user already follows this team, if not add it
+@app.post("/me/teams/{team_id}")
 async def follow_team(
         team_id: str,
         user: dict = Depends(get_current_user),
@@ -42,8 +41,19 @@ async def follow_team(
 
     return {"followed": team_id}
 
-@app.get("/me/teams")
+# gets the user and deletes the team from their followed teams
+@app.delete("/me/teams/{team_id}")
+async def unfollow_team(
+    team_id: str,
+    user: dict = Depends(get_current_user),
+    db = Depends(get_db)
+):
+    db.query(UserTeam).filter_by(user_id=user["uid"], team_id=team_id).delete()
+    db.commit()
+    return {"unfollowed": team_id}
+
 # gets all the teams followed by the user
+@app.get("/me/teams")
 async def get_my_teams(
         user: dict = Depends(get_current_user),
         db = Depends(get_db)
