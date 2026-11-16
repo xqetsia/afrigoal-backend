@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends
 from app.services.livescore import fetch_teams
 from app.services.auth import get_current_user
-from app.db import SessionLocal, User, UserTeam
+from app.db import SessionLocal
+from app.models import User, UserTeam
 
 app = FastAPI()
 def get_db():
