@@ -1,10 +1,10 @@
 import firebase_admin
 from firebase_admin import auth, credentials
 from fastapi import Header, HTTPException
-import os
+from app.config import FIREBASE_CREDENTIALS_PATH
 
 
-cred = credentials.Certificate(os.getenv("FIREBASE_CREDENTIALS_PATH"))
+cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
 firebase_admin.initialize_app(cred)
 
 async def get_current_user(authorization: str = Header(...)):

@@ -1,27 +1,14 @@
-import os
 import httpx
-from dotenv import load_dotenv
+from app.config import LIVESCORE_API_KEY, LIVESCORE_API_SECRET
 
-
-"""
-COMMAND LINE: 
-source venv/bin/activate
-uvicorn main:app --reload
-
-"""
-
-load_dotenv()
-
-API_KEY = os.getenv("LIVESCORE_API_KEY")
-API_SECRET = os.getenv("LIVESCORE_API_SECRET")
 
 BASE_URL = "https://livescore-api.com/api-client"
 
 async def fetch_teams():
     url = f"{BASE_URL}/competitions/participants.json"
     params = {
-        "key": API_KEY,
-        "secret": API_SECRET,
+        "key": LIVESCORE_API_KEY,
+        "secret": LIVESCORE_API_SECRET,
         "competition_id": 227,
         "season": 2025
     }
