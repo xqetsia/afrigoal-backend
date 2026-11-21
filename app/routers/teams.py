@@ -3,6 +3,7 @@ import logging
 import httpx
 from fastapi import APIRouter, HTTPException
 
+from app.schemas.team import TeamsResponse
 from app.services.livescore import fetch_teams
 
 logger = logging.getLogger(__name__)
@@ -11,7 +12,7 @@ router = APIRouter(tags=["teams"])
 
 
 # gets all the african teams (countries)
-@router.get("/afcon/teams")
+@router.get("/afcon/teams", response_model=TeamsResponse)
 async def get_teams():
     try:
         data = await fetch_teams()

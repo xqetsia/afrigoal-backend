@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.db import get_db
 from app.models import User, UserTeam
+from app.schemas.me import FollowResponse, MyTeamsResponse, UnfollowResponse
 from app.services.auth import get_current_user
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/me", tags=["me"])
 
 # retrieve the user from the database. if the user does not exist, add them to the database
 # check if user already follows this team, if not add it
-@router.post("/teams/{team_id}")
+@router.post("/teams/{team_id}", response_model=FollowResponse)
 def follow_team(
     team_id: str,
     user: dict = Depends(get_current_user),
@@ -32,7 +33,7 @@ def follow_team(
 
 
 # gets the user and deletes the team from their followed teams
-@router.delete("/teams/{team_id}")
+@router.delete("/teams/{team_id}", response_model=UnfollowResponse)
 def unfollow_team(
     team_id: str,
     user: dict = Depends(get_current_user),
@@ -44,7 +45,7 @@ def unfollow_team(
 
 
 # gets all the teams followed by the user
-@router.get("/teams")
+@router.get("/teams", response_model=MyTeamsResponse)
 def get_my_teams(
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
