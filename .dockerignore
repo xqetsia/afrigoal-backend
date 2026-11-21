@@ -1,0 +1,9 @@
+# Keep secrets and local junk out of the image.
+.env
+service-account.json
+venv/
+__pycache__/
+*.pyc
+.git/
+.idea/
+.pytest_cache/
