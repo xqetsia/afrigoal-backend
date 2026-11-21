@@ -1,21 +1,27 @@
+from functools import cache
+
 import firebase_admin
-from firebase_admin import auth, credentials
 from fastapi import Header, HTTPException
+from firebase_admin import auth, credentials
+
 from app.config import FIREBASE_CREDENTIALS_PATH
 
 
-cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
-firebase_admin.initialize_app(cred)
+# Initialized on first use, not at import, so tests and CI can import the app
+# without a service-account.json. @cache makes it run only once.
+@cache
+def _firebase_app():
+    return firebase_admin.initialize_app(credentials.Certificate(FIREBASE_CREDENTIALS_PATH))
 
-async def get_current_user(authorization: str = Header(...)):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid token format")
 
-    parts = authorization.split(" ")
-    token = parts[1]
+# Plain def: verify_id_token is blocking, so FastAPI runs this in the threadpool.
+def get_current_user(authorization: str | None = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+
+    token = authorization.removeprefix("Bearer ")
 
     try:
-        decoded = auth.verify_id_token(token)
-        return decoded
+        return auth.verify_id_token(token, app=_firebase_app())
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
