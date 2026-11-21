@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Dummy values so app.config imports. No real secrets are needed:
+# tests fake LiveScore, Firebase and the database.
+env:
+  LIVESCORE_API_KEY: ci
+  LIVESCORE_API_SECRET: ci
+  FIREBASE_CREDENTIALS_PATH: does-not-exist.json
+  DATABASE_URL: postgresql://afrigoal:afrigoal@localhost:5432/afrigoal
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pytest
+
+  # Runs every migration on a real, empty Postgres, then fails if a model
+  # changed without a matching migration.
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: afrigoal
+          POSTGRES_PASSWORD: afrigoal
+          POSTGRES_DB: afrigoal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U afrigoal"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements.txt
+      - run: alembic upgrade head
+      - run: alembic check
+
+  # Makes sure the Docker image still builds.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t afrigoal-backend .
